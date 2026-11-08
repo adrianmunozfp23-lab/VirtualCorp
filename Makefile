@@ -40,3 +40,11 @@ ssh-keys:
 
 routeros-box:
 	"$(BOOTSTRAP_DIR)/create_mikrotik_box.sh"
+
+.PHONY: create_templates deploy_equipment
+
+create_templates: ## Crea els templates Debian server i desktop
+	bash automation/scripts/templates/create_templates.sh
+
+deploy_equipment: ## Desplega servidors, impressores, PCs i pve01
+	bash automation/scripts/deploy/deploy_equipment.sh
