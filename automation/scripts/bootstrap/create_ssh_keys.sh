@@ -203,7 +203,6 @@ mkdir -p "${PUBLIC_KEY_DIR}"
 
 check_repo_for_private_keys
 
-generate_key "vcorp_auditor"
 generate_key "vcorp_sysadmin"
 generate_mikrotik_key
 
