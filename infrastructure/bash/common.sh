@@ -156,7 +156,7 @@ fetch_iso() {   # url fitxer sha256
     mkdir -p "$(dirname "$file")"
     if [[ ! -f "$file" ]]; then
         log_info "Descarregant $url"
-        curl -fL --retry 3 -o "$file.part" "$url" && mv "$file.part" "$file" \
+        curl -fL --retry 3 -C - -o "$file.part" "$url" && mv "$file.part" "$file" \
             || { log_err "Ha fallat la descàrrega de $url"; rm -f "$file.part"; exit 1; }
     fi
     if ! echo "$sha  $file" | sha256sum -c - >/dev/null 2>&1; then
