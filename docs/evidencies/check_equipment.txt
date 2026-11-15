@@ -1,0 +1,32 @@
+== Templates ==
+OK     tpl-debian-server (snapshots: 1)
+OK     tpl-debian-desktop (snapshots: 1)
+== Equipament (configs/equipment.csv) ==
+NOM         TIPUS     DISC            XARXES         NAT
+pve01       pve       disc-propi      privada        0
+dbsrv       server    clon-enllacat   privada        0
+infosrv     server    clon-enllacat   privada        0
+websrv      server    clon-enllacat   dmz            0
+printer0    server    clon-enllacat   pl0            0
+printer1    server    clon-enllacat   pl1            0
+printer2    server    clon-enllacat   pl2            0
+printer3    server    clon-enllacat   pl3            0
+expo1       desktop   clon-enllacat   pl0            0
+expo2       desktop   clon-enllacat   pl0            0
+expo3       desktop   clon-enllacat   pl0            0
+expo4       desktop   clon-enllacat   pl0            0
+conserge1   desktop   clon-enllacat   pl0            0
+conserge2   desktop   clon-enllacat   pl0            0
+pc1-01      desktop   clon-enllacat   pl1            0
+pc2-01      desktop   clon-enllacat   pl2            0
+pc3-01      desktop   clon-enllacat   pl3            0
+direccio1   desktop   clon-enllacat   pl3_direccio   0
+direccio2   desktop   clon-enllacat   pl3_direccio   0
+direccio3   desktop   clon-enllacat   pl3_direccio   0
+== Routers ==
+mikrotik0   xarxes=rt0_1,dmz,privada          nat=1
+mikrotik1   xarxes=rt0_1,rt0_1,rt1_2,pl0      nat=0
+mikrotik2   xarxes=rt1_2,rt1_2,rt2_3,pl1,pl2  nat=0
+mikrotik3   xarxes=rt2_3,rt2_3,pl3,pl3_direccio nat=0
+== Màquines amb NAT (només mikrotik0 hauria de sortir) ==
+mikrotik0
