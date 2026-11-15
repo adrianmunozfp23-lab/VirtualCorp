@@ -1,0 +1,22 @@
+# nom;tipus;grup;ram_mb;cpus;xarxes
+# tipus: server | desktop | pve
+pve01;pve;CPD;6144;4;privada
+dbsrv;server;CPD;1024;1;privada
+infosrv;server;CPD;1024;1;privada
+websrv;server;DMZ;1024;1;dmz
+printer0;server;Impressores;512;1;pl0
+printer1;server;Impressores;512;1;pl1
+printer2;server;Impressores;512;1;pl2
+printer3;server;Impressores;512;1;pl3
+expo1;desktop;Planta0;1024;1;pl0
+expo2;desktop;Planta0;1024;1;pl0
+expo3;desktop;Planta0;1024;1;pl0
+expo4;desktop;Planta0;1024;1;pl0
+conserge1;desktop;Planta0;1024;1;pl0
+conserge2;desktop;Planta0;1024;1;pl0
+pc1-01;desktop;Planta1;1024;1;pl1
+pc2-01;desktop;Planta2;1024;1;pl2
+pc3-01;desktop;Planta3;1024;1;pl3
+direccio1;desktop;Planta3;1024;1;pl3_direccio
+direccio2;desktop;Planta3;1024;1;pl3_direccio
+direccio3;desktop;Planta3;1024;1;pl3_direccio

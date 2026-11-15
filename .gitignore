@@ -208,3 +208,6 @@ __pycache__/
 venv/
 .venv/
 
+artifacts/build/
+artifacts/secrets/
+artifacts/images/**/*.iso
