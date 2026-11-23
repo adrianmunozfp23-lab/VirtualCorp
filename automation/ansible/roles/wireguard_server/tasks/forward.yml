@@ -1,0 +1,18 @@
+---
+# S'executa al node de control (delegate_to: localhost): reenviament UDP de VirtualBox.
+- name: Consultar la VM del router de vora
+  ansible.builtin.command:
+    argv: ["{{ vboxmanage_bin }}", showvminfo, "{{ wg_vm_name }}", --machinereadable]
+  register: wg_vm_info
+  changed_when: false
+
+- name: Crear el reenviament UDP si no existeix
+  ansible.builtin.command:
+    argv:
+      - "{{ vboxmanage_bin }}"
+      - "{{ 'controlvm' if 'VMState=\"running\"' in wg_vm_info.stdout else 'modifyvm' }}"
+      - "{{ wg_vm_name }}"
+      - natpf1
+      - "{{ wg_forward_rule_name }},udp,{{ wg_forward_host_ip }},{{ wg_listen_port }},,{{ wg_listen_port }}"
+  when: "('\"' ~ wg_forward_rule_name ~ ',udp,') not in wg_vm_info.stdout"
+  changed_when: true

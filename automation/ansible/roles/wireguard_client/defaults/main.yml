@@ -1,0 +1,2 @@
+wg_vpn_dir: artifacts/vpn
+wg_keepalive: 25

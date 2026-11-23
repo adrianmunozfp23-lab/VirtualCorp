@@ -1,0 +1,33 @@
+---
+- name: Generar o llegir les claus dels clients i preparar el reenviament UDP
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Claus dels clients (node de control)
+      ansible.builtin.include_role:
+        name: wireguard_client
+        tasks_from: keys.yml
+
+    - name: Reenviament UDP de VirtualBox cap a mikrotik0
+      ansible.builtin.include_role:
+        name: wireguard_server
+        tasks_from: forward.yml
+      vars:
+        vboxmanage_bin: "{{ hostvars['localhost']['vboxmanage_bin'] }}"
+
+- name: Configurar el servidor WireGuard a mikrotik0
+  hosts: mikrotik0
+  gather_facts: false
+  vars:
+    wg_client_public_keys: "{{ hostvars['localhost'].wg_client_public_keys }}"
+  roles:
+    - wireguard_server
+
+- name: Escriure els fitxers de configuració dels clients
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Fitxer del client (protegit, fora de Git)
+      ansible.builtin.include_role:
+        name: wireguard_client
+        tasks_from: config.yml

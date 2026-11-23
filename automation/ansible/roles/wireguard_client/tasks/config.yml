@@ -1,0 +1,19 @@
+---
+- name: Llegir la clau privada de cada client
+  ansible.builtin.slurp:
+    src: "{{ wg_vpn_dir }}/{{ item.name }}.key"
+  register: wg_client_private_raw
+  loop: "{{ wg_clients }}"
+  no_log: true
+
+- name: Escriure el fitxer de configuració WireGuard de cada client
+  ansible.builtin.template:
+    src: client.conf.j2
+    dest: "{{ wg_vpn_dir }}/{{ item.item.name }}.conf"
+    mode: "0600"
+  vars:
+    client_private_key: "{{ item.content | b64decode | trim }}"
+    client_address: "{{ item.item.address }}"
+    server_public_key: "{{ hostvars[wg_vm_name].wg_server_public_key }}"
+  loop: "{{ wg_client_private_raw.results }}"
+  no_log: true

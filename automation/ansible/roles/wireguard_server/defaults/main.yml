@@ -1,0 +1,8 @@
+vboxmanage_bin: VBoxManage
+wg_interface: wg-vcorp
+wg_listen_port: 51820
+wg_server_address: 10.17.10.1/24
+wg_tunnel_prefix: 10.17.10.0/24
+wg_authorized_networks: []
+wg_clients: []
+wg_client_public_keys: {}

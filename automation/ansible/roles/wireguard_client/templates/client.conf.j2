@@ -1,0 +1,9 @@
+[Interface]
+PrivateKey = {{ client_private_key }}
+Address = {{ client_address }}/32
+
+[Peer]
+PublicKey = {{ server_public_key }}
+Endpoint = {{ wg_endpoint_host }}:{{ wg_listen_port }}
+AllowedIPs = {{ (wg_authorized_networks + [wg_tunnel_prefix]) | join(', ') }}
+PersistentKeepalive = {{ wg_keepalive }}

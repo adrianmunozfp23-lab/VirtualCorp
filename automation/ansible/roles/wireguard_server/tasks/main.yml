@@ -1,0 +1,107 @@
+---
+# Rol per a mikrotik0 (network_cli). Cada objecte es comprova abans de crear-lo.
+- name: Comprovar si existeix la interfície WireGuard
+  community.routeros.command:
+    commands:
+      - /interface/wireguard print count-only where name="{{ wg_interface }}"
+  register: wg_iface_check
+  changed_when: false
+
+- name: Crear la interfície WireGuard
+  community.routeros.command:
+    commands:
+      - /interface/wireguard add name="{{ wg_interface }}" listen-port={{ wg_listen_port }} comment="VirtualCorp VPN"
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  when: wg_iface_check.stdout[0].splitlines() | last | trim | int == 0
+
+- name: Comprovar si el port d'escolta és el desitjat
+  community.routeros.command:
+    commands:
+      - /interface/wireguard print count-only where name="{{ wg_interface }}" listen-port={{ wg_listen_port }}
+  register: wg_port_check
+  changed_when: false
+
+- name: Ajustar el port d'escolta si difereix
+  community.routeros.command:
+    commands:
+      - /interface/wireguard set [find name={{ wg_interface }}] listen-port={{ wg_listen_port }}
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  when: wg_port_check.stdout[0].splitlines() | last | trim | int == 0
+
+- name: Comprovar si l'adreça del túnel ja està assignada
+  community.routeros.command:
+    commands:
+      - /ip/address print count-only where address="{{ wg_server_address }}" interface="{{ wg_interface }}"
+  register: wg_addr_check
+  changed_when: false
+
+- name: Assignar l'adreça del túnel a la interfície
+  community.routeros.command:
+    commands:
+      - /ip/address add address={{ wg_server_address }} interface={{ wg_interface }} comment="VirtualCorp VPN"
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  when: wg_addr_check.stdout[0].splitlines() | last | trim | int == 0
+
+- name: Llegir la clau pública del servidor
+  community.routeros.command:
+    commands:
+      - ":put [/interface/wireguard get [find name=\"{{ wg_interface }}\"] public-key]"
+  register: wg_pubkey_raw
+  changed_when: false
+
+- name: Desar la clau pública del servidor com a fet
+  ansible.builtin.set_fact:
+    wg_server_public_key: "{{ wg_pubkey_raw.stdout[0].splitlines() | last | trim }}"
+
+- name: Comprovar si cada client ja està registrat amb la seva clau
+  community.routeros.command:
+    commands:
+      - /interface/wireguard/peers print count-only where interface="{{ wg_interface }}" name="{{ item.name }}" public-key="{{ wg_client_public_keys[item.name] }}" allowed-address="{{ item.address }}/32"
+  register: wg_peer_check
+  loop: "{{ wg_clients }}"
+  changed_when: false
+
+- name: Eliminar peers antics amb el mateix nom i dades diferents
+  community.routeros.command:
+    commands:
+      - /interface/wireguard/peers remove [find where interface={{ wg_interface }} name={{ item.item.name }}]
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  loop: "{{ wg_peer_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.stdout[0].splitlines() | last | trim | int == 0
+
+- name: Registrar els clients com a peers
+  community.routeros.command:
+    commands:
+      - /interface/wireguard/peers add interface={{ wg_interface }} name={{ item.item.name }} public-key="{{ wg_client_public_keys[item.item.name] }}" allowed-address={{ item.item.address }}/32 comment="VirtualCorp VPN"
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  loop: "{{ wg_peer_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.stdout[0].splitlines() | last | trim | int == 0
+
+- name: Definir les regles de tallafoc de la VPN (ordre de creació)
+  ansible.builtin.set_fact:
+    wg_firewall_rules: |-
+      {% set rules = [{'comment': 'vcorp-wg forward drop resta', 'chain': 'forward',
+                       'args': 'action=drop in-interface=' ~ wg_interface}] %}
+      {% for net in wg_authorized_networks | reverse %}
+      {% set _ = rules.append({'comment': 'vcorp-wg forward accept ' ~ net, 'chain': 'forward',
+                               'args': 'action=accept in-interface=' ~ wg_interface ~ ' dst-address=' ~ net}) %}
+      {% endfor %}
+      {% set _ = rules.append({'comment': 'vcorp-wg input udp ' ~ wg_listen_port, 'chain': 'input',
+                               'args': 'action=accept protocol=udp dst-port=' ~ wg_listen_port}) %}
+      {{ rules | to_json }}
+
+- name: Aplicar cada regla de tallafoc (a dalt de la cadena, sense duplicar)
+  ansible.builtin.include_tasks: firewall_rule.yml
+  loop: "{{ wg_firewall_rules | from_json }}"
+  loop_control:
+    loop_var: rule
+    label: "{{ rule.comment }}"

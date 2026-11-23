@@ -1,0 +1,19 @@
+---
+- name: "Comprovar la regla '{{ rule.comment }}'"
+  community.routeros.command:
+    commands:
+      - /ip/firewall/filter print count-only where comment="{{ rule.comment }}"
+      - /ip/firewall/filter print count-only
+  register: fw_check
+  changed_when: false
+
+- name: "Crear la regla '{{ rule.comment }}'"
+  community.routeros.command:
+    commands:
+      - >-
+        /ip/firewall/filter add chain={{ rule.chain }} {{ rule.args }}
+        comment="{{ rule.comment }}"
+        {{ 'place-before=0' if fw_check.stdout[1].splitlines() | last | trim | int > 0 else '' }}
+  register: ros_out
+  failed_when: "ros_out.stdout | join('\n') is search('failure:|syntax error|bad command|no such item|invalid value|expected end of command')"
+  when: fw_check.stdout[0].splitlines() | last | trim | int == 0

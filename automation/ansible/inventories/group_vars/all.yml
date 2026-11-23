@@ -1,0 +1,24 @@
+---
+# Dades NO secretes de la VPN WireGuard (delegació 17)
+wg_vm_name: mikrotik0                 # router de vora (NAT de VirtualBox)
+wg_interface: wg-vcorp
+wg_listen_port: 51820                 # port UDP del servidor
+wg_tunnel_prefix: 10.17.10.0/24       # xarxa del túnel
+wg_server_address: 10.17.10.1/24      # adreça del servidor al túnel
+
+# Xarxes de VirtualCorp que el client pot arribar (planta baixa, 1, 2 i 3)
+wg_authorized_networks:
+  - 10.17.0.0/22
+
+wg_clients:
+  - name: client1
+    address: 10.17.10.2
+
+# Reenviament UDP de VirtualBox (node de control -> NAT de mikrotik0)
+wg_forward_rule_name: wg-vcorp
+wg_forward_host_ip: 127.0.0.1         # adreça d'escolta al node de control
+wg_endpoint_host: 127.0.0.1           # endpoint que es posa al fitxer del client
+wg_keepalive: 25
+
+# Fitxers secrets (ignorats per Git: artifacts/**)
+wg_vpn_dir: "{{ playbook_dir }}/../../../artifacts/vpn"

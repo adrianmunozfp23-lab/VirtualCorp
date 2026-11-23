@@ -1,0 +1,72 @@
+# Validacio VPN WireGuard - delegacio 17 (2026-11-23T17:31:08+01:00)
+
+## Peer a RouterOS (mikrotik0)
+Flags: X - disabled; R - running 
+ 0  R ;;; VirtualCorp VPN
+      name="wg-vcorp" mtu=1420 listen-port=51820 
+      public-key="h5Zt+ePPKsAa2hdB+0hBpoVb3BdOMVegFBYDBWB/NWY=" 
+
+Flags: X - disabled; D - dynamic 
+ 0    ;;; VirtualCorp VPN
+      interface=wg-vcorp name="client1" 
+      public-key="zdceLi8ez6LzWFeduIJnEmBwVjQpKgBFVXT5Mg4cCDo=" 
+      endpoint-address="" endpoint-port=0 current-endpoint-address=10.0.2.2 
+      current-endpoint-port=46906 allowed-address=10.17.10.2/32 
+      client-endpoint="" client-allowed-address="" rx=6.6KiB tx=6.0KiB 
+      last-handshake=24s 
+
+Columns: ADDRESS, NETWORK, INTERFACE, VRF
+# ADDRESS        NETWORK     INTERFACE  VRF 
+;;; VirtualCorp VPN
+0 10.17.10.1/24  10.17.10.0  wg-vcorp   main
+
+
+## Regles de tallafoc afegides
+Flags: X - disabled, I - invalid; D - dynamic 
+ 0    ;;; vcorp-wg forward accept 10.17.0.0/22
+      chain=forward action=accept dst-address=10.17.0.0/22 
+      in-interface=wg-vcorp 
+
+ 1    ;;; vcorp-wg input udp 51820
+      chain=input action=accept protocol=udp dst-port=51820 
+
+ 2    ;;; vcorp-wg forward drop resta
+      chain=forward action=drop in-interface=wg-vcorp 
+
+
+## Reenviament UDP de VirtualBox
+Forwarding(0)="ssh,tcp,127.0.0.1,2200,,22"
+Forwarding(1)="wg-vcorp,udp,127.0.0.1,51820,,51820"
+
+## Client: interficie i rutes (sense claus)
+vcorp            UNKNOWN        10.17.10.2/32 
+10.17.0.0/22 dev vcorp scope link 
+10.17.10.0/24 dev vcorp scope link 
+
+## Pings pel tunel
+10.17.10.1: OK
+10.17.0.129: OK
+10.17.0.193: OK
+10.17.0.225: OK
+10.17.0.226: OK
+10.17.1.1: OK
+10.17.2.1: OK
+10.17.3.1: OK
+10.17.3.129: OK
+
+## SSH pel tunel
+mikrotik0
+
+## Tunel dividit: Internet per l'interficie directa
+1.1.1.1 via 172.16.0.1 dev wlp45s0 
+https://example.com -> HTTP 200
+
+## Prova down/up del tunel: handshake despres de reactivar
+      client-endpoint="" client-allowed-address="" rx=13.5KiB tx=12.4KiB 
+      last-handshake=42s 
+
+## Persistencia: despres d'apagar/arrencar mikrotik0 el playbook no canvia res
+PLAY RECAP *********************************************************************
+localhost                  : ok=11   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+mikrotik0                  : ok=13   changed=0    unreachable=0    failed=0    skipped=8    rescued=0    ignored=0   
+

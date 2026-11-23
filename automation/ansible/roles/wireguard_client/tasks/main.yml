@@ -1,0 +1,4 @@
+---
+# Per defecte: claus del client (llegir-les o generar-les).
+- name: Generar o llegir les claus dels clients
+  ansible.builtin.include_tasks: keys.yml
